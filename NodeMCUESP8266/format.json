@@ -39,7 +39,7 @@
     {
         "mssid" : 1,
         "id": 1,
-        "cmd": 1, //command corresponds to device type. ex. LED 1 is on
+        "cmd": 1, //command corresponds to device type. ex. LED 01 is on
         "value" : 500 //optional
     },
 
