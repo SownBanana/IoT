@@ -1,5 +1,5 @@
 const mqtt=require('mqtt');
-const endClient=require('./end-client-layer.js')
+const endClient=require('./Model/end-client-layer.js')
 const client = mqtt.connect('mqtt://broker.hivemq.com')
 client.on('connect', () => {
     client.subscribe('sownInfo')
