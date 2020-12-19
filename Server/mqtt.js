@@ -3,9 +3,12 @@ const endClient = require('./Model/end-client-layer.js')
 const client = mqtt.connect('mqtt://broker.hivemq.com')
 const express = require('express')
 var mysql = require('mysql')
+// const initAPIs = require("./routes/api");
 const app = express()
 const PORT = process.env.PORT || 3000;
 var requestMessage = 0, statusMessageQueue = {};
+const THIEF = 113;
+const AIR = 114;
 
 //connect to db
 var con = mysql.createConnection({
@@ -20,6 +23,7 @@ con.connect(function (err) {
   console.log("Connected!!!");
 });
 
+//-------------------------------------------------------------------------------------------
 function sendMessage(topic, message) {
   if (message.assignList !== undefined) {
     for (i = 0; i < message.assignList.length; i++) {
@@ -33,9 +37,10 @@ function sendMessage(topic, message) {
     statusMessageQueue[requestMessage] = { resp_type: "Not recv", mss: "" };
     requestMessage++;
   }
+  // console.log("Send to" + topic)
   client.publish(topic, JSON.stringify(message));
-
 }
+
 var deviceDict = {};
 var defaultDevice = { //danh sach cac thiet bi cai dat
   "assignList": [
@@ -47,7 +52,7 @@ var defaultDevice = { //danh sach cac thiet bi cai dat
     },
     {
       "mssid": 2,
-      "id": 2,
+      "id": 69,
       "type": 2,
       "pin": 7
     }
@@ -81,8 +86,8 @@ client.on("message", (topic, message) => {
       }
       if (check == true) {
         deviceDict[obj.id].push(obj);
-        console.log(obj.id);
-
+        // console.log(obj.id);
+        sendMessage("IoT8", deviceDict[obj.id]);
         //luu vao database
         con.query("SELECT COUNT(*) AS num FROM device_info WHERE device_id = " + obj.id, function (err, result) {
           if (err) throw err;
@@ -105,9 +110,21 @@ client.on("message", (topic, message) => {
             sql = "INSERT INTO `device_info` (device_id, value, time_stamp) VALUES (" + obj.id + "," + obj.value + "," + obj.time_stamp + ");"
           }
           else if(type == 2){                           //gui json AIR
+            if(obj.value > 25){
+              warning = {};
+              warning.code = AIR;
+              warning.message = "warning AIR";
+              sendMessage("warning", warning);
+            }
             sql = "INSERT INTO `device_info` (device_id, value, time_stamp, duration) VALUES (" + obj.id + "," + obj.value + "," + obj.time_stamp + "," + obj.duration +");"
           }
           else{                                         //gui json NFC
+            if(obj.permission == "denied"){
+              warning = {};
+              warning.code = THIEF;
+              warning.message = "warning THIEF";
+              sendMessage("warning", warning);
+            }
             sql = "INSERT INTO `device_info` (device_id, value, time_stamp, permission) VALUES (" + obj.id + "," + obj.value + "," + obj.time_stamp + "," + obj.permission +");"
           }
 
@@ -130,12 +147,23 @@ client.on("message", (topic, message) => {
       console.log(message);
       statusMessageQueue[message.mssid] = { resp_type: message.resp_type, mss: message.mss };
     }
+    if(topic == 'TaiHangL'){
+      var obj = JSON.parse(message);
+      check = false;
+      for (var key in deviceDict) {
+        if (key == obj.id) {
+          check = true;
+          break;
+        }
+      }
+      if(check == true){
+        //Tài gửi thành công, thì gửi cho Sơn rồi Sơn thông báo lại
+      }
+    }
   }
   catch (e) {
     console.log(e);
   }
-
-
 })
 
 //API
