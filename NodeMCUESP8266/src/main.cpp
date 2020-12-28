@@ -72,6 +72,8 @@ byte durationNotReadNFCCount[NUMS_PIN];
 #define RESET_RFID_DURATION 1200
 bool isAddingCard = false;
 
+int storemssid = 0;
+
 void unlockDoor()
 {
   Serial.println("Door Unlock!");
@@ -109,13 +111,6 @@ bool deletePermission(String permission)
   return rs;
 }
 
-bool addPermission(Srting tag)
-{
-  if (checkPermission(tag))
-    return false;
-  accessPermission[curPermissionNumber++] = tag;
-}
-
 bool checkPermission(String tag)
 {
   for (byte i = 0; i < curPermissionNumber; i++)
@@ -126,10 +121,17 @@ bool checkPermission(String tag)
   return false;
 }
 
+bool addPermission(String tag)
+{
+  if (checkPermission(tag))
+    return false;
+  accessPermission[curPermissionNumber++] = tag;
+}
+
 void publishResponse(int mssid, const char *type, char *mss)
 {
   char *mess = new char[500];
-  sprintf(mess, "{\"mssid\":%d,\"resp_type\":%s,\"err\":%s}", mssid, type, mss);
+  sprintf(mess, "{\"mssid\":%d,\"resp_type\":\"%s\",\"mss\":\"%s\"}", mssid, type, mss);
   client.publish(rsp_topic, mess);
 }
 void publishError(int mssid, char *errorMss)
@@ -139,6 +141,14 @@ void publishError(int mssid, char *errorMss)
 void publishSuccess(int mssid, char *successMss)
 {
   publishResponse(mssid, "success", successMss);
+}
+char *string2char(String command)
+{
+  if (command.length() != 0)
+  {
+    char *p = const_cast<char *>(command.c_str());
+    return p;
+  }
 }
 
 byte getPin(byte id)
@@ -257,21 +267,21 @@ void sendMonitorInfo(byte id, int mssid)
             mss = "denied";
           }
           memset(json, 0, JSON_SIZE);
-          sprintf(json, "{\"id\":%d, \"value\": %d,\"permission\":%s, \"time_stamp\":%d}", id, tag.toInt(), mss, now);
+          sprintf(json, "{\"id\":%d, \"value\": \"%d\",\"permission\":\"%s\", \"time_stamp\":%d}", id, tag.toInt(), mss, now);
           client.publish(info_topic, json);
         }
         else
         {
           memset(json, 0, JSON_SIZE);
-          sprintf(json, "{\"id\":%d, \"value\": %d, \"time_stamp\":%d}", id, tag.toInt(), now);
+          sprintf(json, "{\"id\":%d, \"value\": \"%d\", \"time_stamp\":%d}", id, tag.toInt(), now);
           client.publish(info_topic, json);
           if (permission)
-            publishError(mssid, "Permission Existed");
+            publishError(storemssid, "400");
           else
           {
             accessPermission[curPermissionNumber++] = tag;
             Serial.println("Added Permission");
-            publishSuccess(mssid, "Add Permission Success");
+            publishSuccess(storemssid, string2char(tag));
           }
           isAddingCard = false;
         }
@@ -306,7 +316,7 @@ void assignPin(byte pin, byte type, byte id)
   else if (type == MONITOR)
   {
     pinMode(pin, INPUT);
-    Task *monitorTask = new Task(id, 1000, sendMonitorInfo);
+    Task *monitorTask = new Task(id, 2000, sendMonitorInfo);
     tasks[pin] = monitorTask;
   }
   else if (type == NFC)
@@ -456,6 +466,7 @@ void callback(char *topic, byte *payload, unsigned int length)
       if (cmd == PR_ADD_CARD)
       {
         isAddingCard = true;
+        storemssid = mssid;
       }
       else if (cmd == PR_ADD_CARD_WITH_CODE)
       {
@@ -500,14 +511,17 @@ void callback(char *topic, byte *payload, unsigned int length)
       JsonArray deviceArray = doc["assignList"];
       for (JsonObject device : deviceArray)
       {
+        Serial.println("Add to pin");
         assignPin(device["pin"], device["type"], device["id"], device["mssid"]);
       }
       if (doc.containsKey("permissions"))
       {
+        Serial.print("New Permission");
         clearPermission();
         JsonArray permissionArray = doc["permissions"];
         for (JsonVariant p : permissionArray)
         {
+          Serial.print("Add new permission");
           accessPermission[curPermissionNumber++] = p.as<String>();
         }
       }
@@ -582,8 +596,8 @@ void setup()
   SPI.begin(); // Init SPI bus
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
-  assignPin(A0, MONITOR, 69); //Built in MQ135
-  assignPin(D4, NFC, 96);
+  // assignPin(A0, MONITOR, 69); //Built in MQ135
+  // assignPin(D4, NFC, 96);
 
   Timer::getInstance()->initialize();
 }
