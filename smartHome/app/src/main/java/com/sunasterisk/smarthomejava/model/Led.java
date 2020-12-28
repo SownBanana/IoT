@@ -3,9 +3,10 @@ package com.sunasterisk.smarthomejava.model;
 import com.google.gson.annotations.SerializedName;
 
 public class Led {
-    public int id;
+    @SerializedName("device_id")
+    private int id;
     @SerializedName("value")
-    public int value;
+    private int value;
 
     public Led(int id, int value) {
         this.id = id;
@@ -13,6 +14,22 @@ public class Led {
     }
 
     public Led() {
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getValue() {
+        return value;
+    }
+
+    public void setValue(int value) {
+        this.value = value;
     }
 
     @Override

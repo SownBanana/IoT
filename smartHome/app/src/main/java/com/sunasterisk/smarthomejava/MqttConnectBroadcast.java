@@ -7,6 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.sunasterisk.smarthomejava.mqtt.*;
+import com.sunasterisk.smarthomejava.mqtt.MqttClientConnect;
+
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -16,82 +19,87 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 
-public class MqttConnectBroadcast extends BroadcastReceiver {
-    static public  String BROAD_CAST_NAME ="MqttConnectBroadcast";
-    static public  String NOTIFI_ID ="BROAD_CARD_NAME";
+import static com.sunasterisk.smarthomejava.config.Config.TOPIC_LED;
+import static com.sunasterisk.smarthomejava.config.Config.TOPIC_WARNING;
 
-    public String TAG = "IoT8";
-    MqttAndroidClient client;
-    String topic = "IoT8";
-    String topic2 = "IoT82";
+public class MqttConnectBroadcast extends BroadcastReceiver implements IMqttController {
+    static public String BROAD_CAST_NAME = "MqttConnectBroadcast";
+    static public String NOTIFI_ID = "BROAD_CARD_NAME";
+
+    private MqttAndroidClient client;
+    String topic = TOPIC_WARNING;
+    public String TAG = topic;
     Context mContext;
-    int idNotify =3;
-    byte[] payload = "Xin chào nhé".getBytes();
+    int idNotify = 3;
+    MqttClientConnect mqttClientConnect;
+
     void initMqtt() {
-        Log.d(TAG, "Init ");
-        String clientId = MqttClient.generateClientId();
-        client =
-                new MqttAndroidClient(mContext.getApplicationContext(), "tcp://broker.hivemq.com:1883",
-                        clientId);
-
+        mqttClientConnect = MqttClientConnect.getInstance();
+        mqttClientConnect.setContext(mContext);
         try {
-            MqttConnectOptions options = new MqttConnectOptions();
-            options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1);
-
-            options.setWill(topic, payload ,1,false);
-            IMqttToken token = client.connect(options);
+            IMqttToken token = mqttClientConnect.mqttConnect();
+            client = mqttClientConnect.getClient();
             token.setActionCallback(new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
-                    // We are connected
-                    Log.d(TAG, "onSuccess");
                     sub(topic);
-//                    pubblicToppic(topic,"");
-//                    sub(topic2);
-//                    pubblicToppic(topic2,"Bật tắt đèn");
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    // Something went wrong e.g. connection timeout or firewall problems
-                    Log.d(TAG, "onFailure");
-
-                }
-            });
-            client.setCallback(new MqttCallback() {
-                @Override
-                public void connectionLost(Throwable cause) {
-
-                }
-
-                @Override
-                public void messageArrived(String topic, MqttMessage message) throws Exception {
-//khi có dữ liệu đổ về thì hàm này chạy
-                    Log.d(topic, topic.toString() +message.toString());
-                    NotificationSmartHouse.callNotify(mContext,idNotify++,topic,"có dữ liệu",message.toString());
-                }
-
-                @Override
-                public void deliveryComplete(IMqttDeliveryToken token) {
 
                 }
             });
         } catch (MqttException e) {
             e.printStackTrace();
         }
+        client.setCallback(new MqttCallback() {
+            @Override
+            public void connectionLost(Throwable cause) {
+
+            }
+
+            @Override
+            public void messageArrived(String topic, MqttMessage message) throws Exception {
+                Log.d(topic, message.toString() + "=====");
+                JSONObject json = new JSONObject(message.toString());
+                if (topic.equals(TOPIC_WARNING)) {
+                    if (json.has("code") && json.has("message")) {
+                        if (json.getInt("code") == 113) {
+                            NotificationSmartHouse.callNotify(mContext, idNotify++, NOTIFI_ID, "Warnning", "Có người đang cố ý mở của nhà bạn");
+                        } else if (json.getInt("code") == 114) {
+                            NotificationSmartHouse.callNotify(mContext, idNotify++, NOTIFI_ID, "Warnning", "Không khí trong nhà bạn có gì đó không ổn");
+                        } else if (json.getInt("code") == 110) {
+                            if (json.getString("message").equals("failed"))
+                                NotificationSmartHouse.callNotify(mContext, idNotify++, NOTIFI_ID, "Thêm thẻ", "Thêm thẻ thất bại");
+                            else if (json.getString("message").equals("success"))
+                                NotificationSmartHouse.callNotify(mContext, idNotify++, NOTIFI_ID, "Thêm thẻ", "Thêm thẻ thành công");
+                        }
+                    }
+                }
+
+            }
+
+            @Override
+            public void deliveryComplete(IMqttDeliveryToken token) {
+
+            }
+        });
 
     }
 
-     static public void start(Context context){
+    static public void start(Context context) {
         Intent intent = new Intent();
         intent.setAction(BROAD_CAST_NAME);
         context.sendBroadcast(intent);
     }
 
-    public void pubblicToppic(String topic, String content){
+    @Override
+    public void pub(String toppic, String content) {
         String payload = content;
         byte[] encodedPayload = new byte[0];
         try {
@@ -102,23 +110,22 @@ public class MqttConnectBroadcast extends BroadcastReceiver {
             e.printStackTrace();
         }
     }
-    public  void sub(String topic){
+
+    @Override
+    public void sub(String topic) {
         int qos = 1;
         try {
             IMqttToken subToken = client.subscribe(topic, qos);
             subToken.setActionCallback(new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
-                    Log.d(TAG,"Sub thành công" );
+                    Log.d(TAG, "Sub thành công");
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken,
                                       Throwable exception) {
-                    Log.d(TAG,"Sub Thất bại");
-                    // The subscription could not be performed, maybe the user was not
-                    // authorized to subscribe on the specified topic e.g. using wildcards
-
+                    Log.d(TAG, "Sub Thất bại");
                 }
             });
         } catch (MqttException e) {
@@ -126,10 +133,11 @@ public class MqttConnectBroadcast extends BroadcastReceiver {
         }
     }
 
+
     @Override
     public void onReceive(Context context, Intent intent) {
-        mContext =context;
-        NotificationSmartHouse.createChannel(context,NOTIFI_ID,NOTIFI_ID, NotificationManager.IMPORTANCE_HIGH);
+        mContext = context;
+        NotificationSmartHouse.createChannel(context, NOTIFI_ID, NOTIFI_ID, NotificationManager.IMPORTANCE_HIGH);
         initMqtt();
     }
 }

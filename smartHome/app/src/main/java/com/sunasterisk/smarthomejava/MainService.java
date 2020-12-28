@@ -31,8 +31,8 @@ public class  MainService extends Service {
     public void innitFore(){
         NotificationSmartHouse.createChannel(this,"MainService","main_service", NotificationManager.IMPORTANCE_HIGH);
 //        NotificationSmartHouse.callNotify(this, 1 ,"MainService","smartHouse","Xin chào");
-        startForeground(1,NotificationSmartHouse.callNotifyService(this,"MainService","smartHouse","XIn chào"));
-        NotificationSmartHouse.callNotify(this,2,"MainService","có dữ liệu","tets");
+        startForeground(1,NotificationSmartHouse.callNotifyService(this,"MainService","Nhà thông minh","IOT"));
+//        NotificationSmartHouse.callNotify(this,2,"MainService","có dữ liệu","tets");
     }
    
 }
