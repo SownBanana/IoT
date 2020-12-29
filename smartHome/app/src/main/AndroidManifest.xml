@@ -14,7 +14,7 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_donut_small_black_24dp"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat"
+        android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
         <activity
             android:name=".Begging"

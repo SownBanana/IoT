@@ -325,7 +325,9 @@ public class MainActivity extends AppCompatActivity implements Callback<List<Led
                 XAxis xAxis = lineChart.getXAxis();
                 xAxis.setLabelCount(20);
                 YAxis yAxisLeft = lineChart.getAxisLeft();
+                yAxisLeft.setLabelCount(10);
                 YAxis yAxisRight = lineChart.getAxisRight();
+                yAxisRight.setLabelCount(10);
                 xAxis.setValueFormatter(new ValueFormatter() {
                     @Override
                     public String getFormattedValue(float value) {
@@ -334,9 +336,9 @@ public class MainActivity extends AppCompatActivity implements Callback<List<Led
                 });
 
 //                lineChart.setVisibleXRangeMaximum(0);
-                LineDataSet dataSet = new LineDataSet(entries, "Đo không khí");
+                LineDataSet dataSet = new LineDataSet(entries, "Không khí");
 //                dataSet.setHighLightColor(R.color.colorPrimary);
-                dataSet.setHighlightLineWidth(16f);
+                dataSet.setColor(Color.RED);
 //                dataSet.setColor(Color.RED);
                 dataSet.setDrawCircles(false);
                 ArrayList<ILineDataSet> dataSets = new ArrayList<>();
