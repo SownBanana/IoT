@@ -10,9 +10,10 @@ public class RetrofitRespon {
 //        http://10.0.2.2:8080/
         String url ="http://192.168.43.38:3000/";
         String url2 ="http://192.168.1.160:3000/";
+        String url3 = "http://192.168.43.141/:3000/";
         mRetrofit=new Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create())
-                .baseUrl(url2)
+                .baseUrl(url3)
                 .build();
     }
     public static RetrofitRespon getInstance(){

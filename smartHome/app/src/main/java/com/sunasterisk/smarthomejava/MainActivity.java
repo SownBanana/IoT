@@ -146,6 +146,13 @@ public class MainActivity extends AppCompatActivity implements Callback<List<Led
                         Air a = new Gson().fromJson(message.toString(),Air.class);
                         airs.add(a);
                         addEntry(new Entry(Float.parseFloat(a.timeStamp), Float.parseFloat(a.value)));
+                    } else if (jsonObject.getInt("type") == 3) {
+                        doors.add(doors.size(),new Gson().fromJson(message.toString(),Door.class));
+                        adapterHisory = new AdapterHistory(doors, MainActivity.this);
+                        recyclerViewHistory.setAdapter(adapterHisory);
+                        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(MainActivity.this);
+                        recyclerViewHistory.setAdapter(adapterHisory);
+                        recyclerViewHistory.setLayoutManager(linearLayoutManager);
                     }
 
                 }

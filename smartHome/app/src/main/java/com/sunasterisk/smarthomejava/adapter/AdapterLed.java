@@ -1,6 +1,8 @@
 package com.sunasterisk.smarthomejava.adapter;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -66,24 +68,47 @@ public class AdapterLed extends RecyclerView.Adapter<AdapterLed.ViewHolder>imple
             holder.imageLight.setImageResource(R.drawable.ic_light_on);
             holder.switchLight.setChecked(true);
         }
-        holder.switchLight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        final Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    led.setValue(1);
-                    holder.imageLight.setImageResource(R.drawable.ic_light_on);
-                    iNetwork.turnLed(led.getId(),led.getValue()).enqueue(AdapterLed.this);
-                } else {
-                    led.setValue(0);
-                    holder.imageLight.setImageResource(R.drawable.ic_light_off);
-                    iNetwork.turnLed(led.getId(),led.getValue()).enqueue(AdapterLed.this);
-                }
-                leds.forEach((e) -> {
-                    Log.d("tag", e.toString());
+            public void run() {
+                holder.switchLight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (isChecked) {
+                            led.setValue(1);
+                            holder.imageLight.setImageResource(R.drawable.ic_light_on);
+                            iNetwork.turnLed(led.getId(),led.getValue()).enqueue(AdapterLed.this);
+                        } else {
+                            led.setValue(0);
+                            holder.imageLight.setImageResource(R.drawable.ic_light_off);
+                            iNetwork.turnLed(led.getId(),led.getValue()).enqueue(AdapterLed.this);
+                        }
+                        leds.forEach((e) -> {
+                            Log.d("tag", e.toString());
+                        });
+                    }
                 });
-//                notifyDataSetChanged();
             }
-        });
+        }, 1000);
+//        holder.switchLight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                if (isChecked) {
+//                    led.setValue(1);
+//                    holder.imageLight.setImageResource(R.drawable.ic_light_on);
+//                    iNetwork.turnLed(led.getId(),led.getValue()).enqueue(AdapterLed.this);
+//                } else {
+//                    led.setValue(0);
+//                    holder.imageLight.setImageResource(R.drawable.ic_light_off);
+//                    iNetwork.turnLed(led.getId(),led.getValue()).enqueue(AdapterLed.this);
+//                }
+//                leds.forEach((e) -> {
+//                    Log.d("tag", e.toString());
+//                });
+////                notifyDataSetChanged();
+//            }
+//        });
     }
 
     @Override
