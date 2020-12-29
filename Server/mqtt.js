@@ -13,6 +13,8 @@ const ADDCARD = 110;
 
 var queueTopic=0;
 var tmpName="";
+var lastWarn=0;
+var delayTime=15;
 //connect to db
 var con = mysql.createConnection({
   host: "localhost",
@@ -117,7 +119,8 @@ client.on("message", (topic, message) => {
             sendMessage("IoT8_HUST", obj);
           }
           else if(obj.type == 2){                           //gui json AIR
-            if(obj.value > 25){
+            if(obj.value > 50&&(Date.now()-delayTime>lastWarn)){
+              lastWarn=Date.now();
               warning = {};
               warning.code = AIR;
               warning.message = "warning AIR";
@@ -126,17 +129,21 @@ client.on("message", (topic, message) => {
               sendMessage("IoT8_HUST_WARNING", warning);
               // console.log(warning);
             }
-            sql = "INSERT INTO `device_info` (device_id, value, time_stamp) VALUES (" + obj.id + "," + obj.value + "," + obj.time_stamp + ");"
+            
+            sql = "INSERT INTO `device_info` (device_id, value, time_stamp) VALUES (" + obj.id + "," + obj.value + "," +obj.time_stamp + ");"
             sendMessage("IoT8_HUST", obj);
           }
           else{                                         //gui json NFC
             if(obj.permission == "denied"){
+             
               warning = {};
               warning.code = THIEF;
               warning.message = "warning THIEF";
               sendMessage("IoT8_HUST_WARNING", warning);
             }
-            sql = "INSERT INTO `device_info` (device_id, time_stamp, permission) VALUES (" + obj.id + "," + obj.time_stamp + "," +"'"+ obj.permission +"'"+");"
+
+            
+            sql = "INSERT INTO `device_info` (device_id, time_stamp, permission) VALUES (" + obj.id + "," + Date.now() + "," +"'"+ obj.permission +"'"+");"
             sendMessage("IoT8_HUST", obj);
           }
           con.query(sql, function (err, result) {
