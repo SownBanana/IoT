@@ -46,7 +46,12 @@ public class AdapterHistory extends RecyclerView.Adapter<AdapterHistory.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolderHisory holder, int position) {
            Door door = doors.get(position);
-           holder.textHistory.setText(FormatTimestamp.formatTimestamp(Integer.parseInt(door.timeStamp)));
+           holder.textHistory.setText(FormatTimestamp.formatTimestamp(Long.parseLong(door.timeStamp)));
+           if(door.nameCard != null){
+               if(door.nameCard.length()>0){
+                   holder.textHistory.setText(FormatTimestamp.formatTimestamp(Long.parseLong(door.timeStamp)) + "   "+door.nameCard);
+               }
+           }
            if (door.permission.equals("granted")){
                holder.textHistory.setTextColor(Color.GREEN);
                holder.imageLock.setImageResource(R.drawable.ic_baseline_lock_open_24);

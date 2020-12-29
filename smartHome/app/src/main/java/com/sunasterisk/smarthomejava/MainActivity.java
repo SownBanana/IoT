@@ -8,6 +8,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -147,7 +149,9 @@ public class MainActivity extends AppCompatActivity implements Callback<List<Led
                         airs.add(a);
                         addEntry(new Entry(Float.parseFloat(a.timeStamp), Float.parseFloat(a.value)));
                     } else if (jsonObject.getInt("type") == 3) {
-                        doors.add(doors.size(),new Gson().fromJson(message.toString(),Door.class));
+                        doors.add(0,new Gson().fromJson(message.toString(),Door.class));
+
+//                        Collections.reverse(doors);
                         adapterHisory = new AdapterHistory(doors, MainActivity.this);
                         recyclerViewHistory.setAdapter(adapterHisory);
                         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(MainActivity.this);
@@ -185,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements Callback<List<Led
         data.addEntry(entry, 0);
 
         // let the chart know it's data has changed
-        lineChart.setVisibleXRangeMaximum(15000);
+        lineChart.setVisibleXRangeMaximum(19000);
         data.notifyDataChanged();
         lineChart.notifyDataSetChanged();
         lineChart.moveViewToX(entry.getX());
@@ -223,15 +227,20 @@ public class MainActivity extends AppCompatActivity implements Callback<List<Led
             case R.id.getCards:
                 dialogGetCards();
                 break;
-            case R.id.getAirs:
-
-                break;
             case R.id.logout:
+                doSaveShared(FILE_USER_TOKEN_SESSION,"false");
+                startActivity(new Intent(this,Login.class));
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
-
+    private void doSaveShared(String key, String value ) {
+        SharedPreferences sharedPreferences = getSharedPreferences(FILE_USER, this.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(key, value);
+        // Save.
+        editor.apply();
+    }
     public void dialogAddCard() {
         LayoutInflater inflater = getLayoutInflater();
         View alertLayout = inflater.inflate(R.layout.dialog_add_card, null);
@@ -311,8 +320,10 @@ public class MainActivity extends AppCompatActivity implements Callback<List<Led
                 entries = new ArrayList<Entry>();
                 airs.forEach((a) -> {
                     entries.add(new Entry(Float.parseFloat(a.timeStamp), Float.parseFloat(a.value)));
+                    
                 });
                 XAxis xAxis = lineChart.getXAxis();
+                xAxis.setLabelCount(20);
                 YAxis yAxisLeft = lineChart.getAxisLeft();
                 YAxis yAxisRight = lineChart.getAxisRight();
                 xAxis.setValueFormatter(new ValueFormatter() {
@@ -322,15 +333,19 @@ public class MainActivity extends AppCompatActivity implements Callback<List<Led
                     }
                 });
 
-                lineChart.setVisibleXRangeMaximum(20);
+//                lineChart.setVisibleXRangeMaximum(0);
                 LineDataSet dataSet = new LineDataSet(entries, "Đo không khí");
-//                dataSet.setDrawCircles(false);
+//                dataSet.setHighLightColor(R.color.colorPrimary);
+                dataSet.setHighlightLineWidth(16f);
+//                dataSet.setColor(Color.RED);
+                dataSet.setDrawCircles(false);
                 ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-
                 dataSets.add(dataSet);
                 LineData data = new LineData(dataSets);
                 lineChart.setData(data);
-                lineChart.setVisibleXRangeMaximum(15000);
+                lineChart.setMaxVisibleValueCount(0);
+                lineChart.setNoDataText("Chưa có dữ liệu gửi về");
+                lineChart.setVisibleXRangeMaximum(19000);
                 data.notifyDataChanged();
                 if (entries.size() > 0) {
                     lineChart.moveViewToX(entries.get(entries.size() - 1).getX());

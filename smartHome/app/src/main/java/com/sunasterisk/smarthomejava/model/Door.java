@@ -7,6 +7,8 @@ public class Door {
     public String timeStamp;
     @SerializedName("permission")
     public String permission;
+    @SerializedName("nameCard")
+    public String nameCard="";
     public static String URL = "localhost:3000/getStateBulb?id=1";
 
     public Door(String timeStamp, String permission) {

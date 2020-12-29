@@ -36,12 +36,14 @@ class Begging : AppCompatActivity() {
             }
 
             override fun onFinish() {
-                if (token.length > 0) {
+                if (token.equals("true")) {
                     var intent = Intent(this@Begging, MainActivity::class.java)
                     startActivity(intent)
+                    finish()
                 } else {
                     var intent = Intent(this@Begging, Login::class.java)
                     startActivity(intent)
+                    finish()
                 }
             }
 
@@ -53,6 +55,7 @@ class Begging : AppCompatActivity() {
         val sharedPreferences = getSharedPreferences(Config.FILE_USER, Context.MODE_PRIVATE)
         if (sharedPreferences != null) {
             token = sharedPreferences.getString(Config.FILE_USER_TOKEN_SESSION, "").toString();
+            Log.d("token",token)
         }
     }
 }
