@@ -4,6 +4,8 @@
         android:title= "Thêm thẻ"/>
     <item android:id="@+id/getCards"
         android:title= "Danh sách thẻ"/>
+    <item android:id="@+id/changeDarkTheme"
+        android:title= "Đổi giao diện"/>
     <item android:id="@+id/logout"
         android:title= "Đăng xuất"/>
 </menu>

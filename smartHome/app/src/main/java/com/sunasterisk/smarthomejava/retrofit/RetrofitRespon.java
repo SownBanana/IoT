@@ -13,7 +13,7 @@ public class RetrofitRespon {
         String url3 = "http://192.168.43.141:3000/";
         mRetrofit=new Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create())
-                .baseUrl(url3)
+                .baseUrl(url)
                 .build();
     }
     public static RetrofitRespon getInstance(){

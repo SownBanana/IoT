@@ -17,7 +17,7 @@ public class FormatTimestamp {
     public static String formatTimestamp(long time) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(time);
-        String date = DateFormat.format("dd-M-yyyy hh:mm:ss", cal).toString();
+        String date = DateFormat.format("dd-M-yyyy hh:mm", cal).toString();
         return date;
     }
 }

@@ -135,7 +135,7 @@ client.on("message", (topic, message) => {
           }
           else{                                         //gui json NFC
             if(obj.permission == "denied"){
-             
+              
               warning = {};
               warning.code = THIEF;
               warning.message = "warning THIEF";

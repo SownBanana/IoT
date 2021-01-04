@@ -3,6 +3,7 @@ package com.sunasterisk.smarthomejava;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -48,6 +49,7 @@ import com.sunasterisk.smarthomejava.model.Led;
 import com.sunasterisk.smarthomejava.mqtt.MqttClientConnect;
 import com.sunasterisk.smarthomejava.retrofit.INetwork;
 import com.sunasterisk.smarthomejava.retrofit.RetrofitRespon;
+import com.sunasterisk.smarthomejava.unit.SaveFile;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -78,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements Callback<List<Led
     RecyclerView recyclerViewHistory;
     RecyclerView.Adapter adapterLed;
     RecyclerView.Adapter adapterHisory;
+    int themeIdcurrent;
     List<Entry> entries;
     LineChart lineChart;
     List<Air> airs;
@@ -88,11 +91,20 @@ public class MainActivity extends AppCompatActivity implements Callback<List<Led
     MqttAndroidClient client;
     public static Retrofit retrofit;
     public INetwork iNetwork;
+    ConstraintLayout constraintLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //Đọc ID theme đã lưu, nếu chưa lưu thì dùng R.style.MyAppTheme
+        SharedPreferences locationpref = getApplicationContext()
+                .getSharedPreferences(FILE_USER, MODE_PRIVATE);
+        themeIdcurrent = locationpref.getInt(FILE_MODE_THEME,R.style.AppTheme);
+        Log.d("themss",themeIdcurrent+"");
+        //Thiết lập theme cho Activity
+        setTheme(themeIdcurrent);
         setContentView(R.layout.activity_main);
+
 //        Service broadcast
         Intent mService = new Intent(this, MainService.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -142,14 +154,14 @@ public class MainActivity extends AppCompatActivity implements Callback<List<Led
                 @Override
                 public void messageArrived(String topic, MqttMessage message) throws Exception {
                     JSONObject jsonObject = new JSONObject(message.toString());
-                    Log.d(topic, message.toString()+"   dfdfgfd" + jsonObject.getInt("type"));
+                    Log.d(topic, message.toString() + "   dfdfgfd" + jsonObject.getInt("type"));
 
                     if (jsonObject.getInt("type") == 2) {
-                        Air a = new Gson().fromJson(message.toString(),Air.class);
+                        Air a = new Gson().fromJson(message.toString(), Air.class);
                         airs.add(a);
                         addEntry(new Entry(Float.parseFloat(a.timeStamp), Float.parseFloat(a.value)));
                     } else if (jsonObject.getInt("type") == 3) {
-                        doors.add(0,new Gson().fromJson(message.toString(),Door.class));
+                        doors.add(0, new Gson().fromJson(message.toString(), Door.class));
 
 //                        Collections.reverse(doors);
                         adapterHisory = new AdapterHistory(doors, MainActivity.this);
@@ -224,23 +236,38 @@ public class MainActivity extends AppCompatActivity implements Callback<List<Led
             case R.id.addCard:
                 dialogAddCard();
                 break;
+            case R.id.changeDarkTheme:
+                //Chuyển đổi theme
+                themeIdcurrent = themeIdcurrent == R.style.AppTheme ?  R.style.Theme_AppCompat :R.style.AppTheme;
+
+                //Lưu lại theme ID
+                SharedPreferences locationpref = getApplicationContext()
+                        .getSharedPreferences(FILE_USER, MODE_PRIVATE);
+                SharedPreferences.Editor spedit = locationpref.edit();
+                spedit.putInt(FILE_MODE_THEME, themeIdcurrent);
+                spedit.apply();
+                recreate();
+
+                break;
             case R.id.getCards:
                 dialogGetCards();
                 break;
             case R.id.logout:
-                doSaveShared(FILE_USER_TOKEN_SESSION,"false");
-                startActivity(new Intent(this,Login.class));
+                doSaveShared(FILE_USER_TOKEN_SESSION, "false");
+                startActivity(new Intent(this, Login.class));
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
-    private void doSaveShared(String key, String value ) {
+
+    private void doSaveShared(String key, String value) {
         SharedPreferences sharedPreferences = getSharedPreferences(FILE_USER, this.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(key, value);
         // Save.
         editor.apply();
     }
+
     public void dialogAddCard() {
         LayoutInflater inflater = getLayoutInflater();
         View alertLayout = inflater.inflate(R.layout.dialog_add_card, null);
@@ -320,7 +347,7 @@ public class MainActivity extends AppCompatActivity implements Callback<List<Led
                 entries = new ArrayList<Entry>();
                 airs.forEach((a) -> {
                     entries.add(new Entry(Float.parseFloat(a.timeStamp), Float.parseFloat(a.value)));
-                    
+
                 });
                 XAxis xAxis = lineChart.getXAxis();
                 xAxis.setLabelCount(20);
