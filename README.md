@@ -2,4 +2,4 @@
 
 - Server
 - Mobile app for end user
-- Software for ESP8266
+- Firmware for ESP8266
