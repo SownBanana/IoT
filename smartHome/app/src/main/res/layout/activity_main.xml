@@ -45,7 +45,7 @@
         android:id="@+id/textHistory"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Trạng thái cửa"
+        android:text="Lịch sử ra vào"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/recyclerViewHistory"

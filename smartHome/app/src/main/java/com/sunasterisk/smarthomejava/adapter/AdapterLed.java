@@ -1,6 +1,9 @@
 package com.sunasterisk.smarthomejava.adapter;
 
 import android.content.Context;
+import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -66,6 +69,7 @@ public class AdapterLed extends RecyclerView.Adapter<AdapterLed.ViewHolder>imple
             holder.imageLight.setImageResource(R.drawable.ic_light_on);
             holder.switchLight.setChecked(true);
         }
+
         holder.switchLight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -73,10 +77,34 @@ public class AdapterLed extends RecyclerView.Adapter<AdapterLed.ViewHolder>imple
                     led.setValue(1);
                     holder.imageLight.setImageResource(R.drawable.ic_light_on);
                     iNetwork.turnLed(led.getId(),led.getValue()).enqueue(AdapterLed.this);
+                    CountDownTimer countDownTimer = new CountDownTimer(2000, 20) {
+                        @Override
+                        public void onTick(long l) {
+                            holder.switchLight.setEnabled(false);
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            holder.switchLight.setEnabled(true);
+                        }
+                    };
+                    countDownTimer.start() ;
                 } else {
                     led.setValue(0);
                     holder.imageLight.setImageResource(R.drawable.ic_light_off);
                     iNetwork.turnLed(led.getId(),led.getValue()).enqueue(AdapterLed.this);
+                    CountDownTimer countDownTimer = new CountDownTimer(2000, 20) {
+                        @Override
+                        public void onTick(long l) {
+                            holder.switchLight.setEnabled(false);
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            holder.switchLight.setEnabled(true);
+                        }
+                    };
+                    countDownTimer.start() ;
                 }
                 leds.forEach((e) -> {
                     Log.d("tag", e.toString());

@@ -24,4 +24,6 @@ public interface INetwork {
     Call<List<Card>> getCards();
     @GET("deleteCard")
     Call<String> deleteCard(@Query("id") int id);
+    @GET("login")
+    Call<Boolean> login(@Query("username") String username,@Query("password") String password);
 }
